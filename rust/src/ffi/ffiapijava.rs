@@ -18,6 +18,7 @@ extern crate jni;
 use super::simpleapi;
 
 use jni::sys::jint;
+use jni::sys::jlong;
 
 // This is the interface to the JVM that we'll
 // call the majority of our methods on.
@@ -748,6 +749,57 @@ pub extern "system" fn Java_org_signal_zkgroup_internal_Native_serverPublicParam
 }
 
 #[no_mangle]
+pub extern "system" fn Java_org_signal_zkgroup_internal_Native_serverPublicParamsCreatePniCredentialRequestContextDeterministicJNI(
+    env: JNIEnv,
+    _class: JClass,
+    serverPublicParams: jbyteArray,
+    randomness: jbyteArray,
+    aci: jbyteArray,
+    pni: jbyteArray,
+    profileKey: jbyteArray,
+    pniCredentialRequestContextOut: jbyteArray,
+) -> i32 {
+    let result = panic::catch_unwind(|| {
+        let server_public_params = env.convert_byte_array(serverPublicParams).unwrap();
+        let randomness = env.convert_byte_array(randomness).unwrap();
+        let aci = env.convert_byte_array(aci).unwrap();
+        let pni = env.convert_byte_array(pni).unwrap();
+        let profile_key = env.convert_byte_array(profileKey).unwrap();
+        let mut pni_credential_request_context: Vec<u8> = vec![
+            0;
+            env.get_array_length(pniCredentialRequestContextOut)
+                .unwrap() as usize
+        ];
+
+        let ffi_return =
+            simpleapi::ServerPublicParams_createPniCredentialRequestContextDeterministic(
+                &server_public_params,
+                &randomness,
+                &aci,
+                &pni,
+                &profile_key,
+                &mut pni_credential_request_context,
+            );
+        if ffi_return != FFI_RETURN_OK {
+            return ffi_return;
+        }
+
+        env.set_byte_array_region(
+            pniCredentialRequestContextOut,
+            0,
+            &u8toi8(pni_credential_request_context)[..],
+        )
+        .unwrap();
+        FFI_RETURN_OK
+    });
+
+    match result {
+        Ok(result) => result,
+        Err(_) => FFI_RETURN_INTERNAL_ERROR,
+    }
+}
+
+#[no_mangle]
 pub extern "system" fn Java_org_signal_zkgroup_internal_Native_serverPublicParamsReceiveProfileKeyCredentialJNI(
     env: JNIEnv,
     _class: JClass,
@@ -783,6 +835,44 @@ pub extern "system" fn Java_org_signal_zkgroup_internal_Native_serverPublicParam
             &u8toi8(profile_key_credential)[..],
         )
         .unwrap();
+        FFI_RETURN_OK
+    });
+
+    match result {
+        Ok(result) => result,
+        Err(_) => FFI_RETURN_INTERNAL_ERROR,
+    }
+}
+
+#[no_mangle]
+pub extern "system" fn Java_org_signal_zkgroup_internal_Native_serverPublicParamsReceivePniCredentialJNI(
+    env: JNIEnv,
+    _class: JClass,
+    serverPublicParams: jbyteArray,
+    pniCredentialRequestContext: jbyteArray,
+    pniCredentialResponse: jbyteArray,
+    pniCredentialOut: jbyteArray,
+) -> i32 {
+    let result = panic::catch_unwind(|| {
+        let server_public_params = env.convert_byte_array(serverPublicParams).unwrap();
+        let pni_credential_request_context =
+            env.convert_byte_array(pniCredentialRequestContext).unwrap();
+        let pni_credential_response = env.convert_byte_array(pniCredentialResponse).unwrap();
+        let mut pni_credential: Vec<u8> =
+            vec![0; env.get_array_length(pniCredentialOut).unwrap() as usize];
+
+        let ffi_return = simpleapi::ServerPublicParams_receivePniCredential(
+            &server_public_params,
+            &pni_credential_request_context,
+            &pni_credential_response,
+            &mut pni_credential,
+        );
+        if ffi_return != FFI_RETURN_OK {
+            return ffi_return;
+        }
+
+        env.set_byte_array_region(pniCredentialOut, 0, &u8toi8(pni_credential)[..])
+            .unwrap();
         FFI_RETURN_OK
     });
 
@@ -830,6 +920,181 @@ pub extern "system" fn Java_org_signal_zkgroup_internal_Native_serverPublicParam
             profileKeyCredentialPresentationOut,
             0,
             &u8toi8(profile_key_credential_presentation)[..],
+        )
+        .unwrap();
+        FFI_RETURN_OK
+    });
+
+    match result {
+        Ok(result) => result,
+        Err(_) => FFI_RETURN_INTERNAL_ERROR,
+    }
+}
+
+#[no_mangle]
+pub extern "system" fn Java_org_signal_zkgroup_internal_Native_serverPublicParamsCreatePniCredentialPresentationDeterministicJNI(
+    env: JNIEnv,
+    _class: JClass,
+    serverPublicParams: jbyteArray,
+    randomness: jbyteArray,
+    groupSecretParams: jbyteArray,
+    pniCredential: jbyteArray,
+    pniCredentialPresentationOut: jbyteArray,
+) -> i32 {
+    let result = panic::catch_unwind(|| {
+        let server_public_params = env.convert_byte_array(serverPublicParams).unwrap();
+        let randomness = env.convert_byte_array(randomness).unwrap();
+        let group_secret_params = env.convert_byte_array(groupSecretParams).unwrap();
+        let pni_credential = env.convert_byte_array(pniCredential).unwrap();
+        let mut pni_credential_presentation: Vec<u8> =
+            vec![0; env.get_array_length(pniCredentialPresentationOut).unwrap() as usize];
+
+        let ffi_return = simpleapi::ServerPublicParams_createPniCredentialPresentationDeterministic(
+            &server_public_params,
+            &randomness,
+            &group_secret_params,
+            &pni_credential,
+            &mut pni_credential_presentation,
+        );
+        if ffi_return != FFI_RETURN_OK {
+            return ffi_return;
+        }
+
+        env.set_byte_array_region(
+            pniCredentialPresentationOut,
+            0,
+            &u8toi8(pni_credential_presentation)[..],
+        )
+        .unwrap();
+        FFI_RETURN_OK
+    });
+
+    match result {
+        Ok(result) => result,
+        Err(_) => FFI_RETURN_INTERNAL_ERROR,
+    }
+}
+
+#[no_mangle]
+pub extern "system" fn Java_org_signal_zkgroup_internal_Native_serverPublicParamsCreateReceiptCredentialRequestContextDeterministicJNI(
+    env: JNIEnv,
+    _class: JClass,
+    serverPublicParams: jbyteArray,
+    randomness: jbyteArray,
+    receiptSerial: jbyteArray,
+    receiptCredentialRequestContextOut: jbyteArray,
+) -> i32 {
+    let result = panic::catch_unwind(|| {
+        let server_public_params = env.convert_byte_array(serverPublicParams).unwrap();
+        let randomness = env.convert_byte_array(randomness).unwrap();
+        let receipt_serial = env.convert_byte_array(receiptSerial).unwrap();
+        let mut receipt_credential_request_context: Vec<u8> = vec![
+            0;
+            env.get_array_length(receiptCredentialRequestContextOut)
+                .unwrap()
+                as usize
+        ];
+
+        let ffi_return =
+            simpleapi::ServerPublicParams_createReceiptCredentialRequestContextDeterministic(
+                &server_public_params,
+                &randomness,
+                &receipt_serial,
+                &mut receipt_credential_request_context,
+            );
+        if ffi_return != FFI_RETURN_OK {
+            return ffi_return;
+        }
+
+        env.set_byte_array_region(
+            receiptCredentialRequestContextOut,
+            0,
+            &u8toi8(receipt_credential_request_context)[..],
+        )
+        .unwrap();
+        FFI_RETURN_OK
+    });
+
+    match result {
+        Ok(result) => result,
+        Err(_) => FFI_RETURN_INTERNAL_ERROR,
+    }
+}
+
+#[no_mangle]
+pub extern "system" fn Java_org_signal_zkgroup_internal_Native_serverPublicParamsReceiveReceiptCredentialJNI(
+    env: JNIEnv,
+    _class: JClass,
+    serverPublicParams: jbyteArray,
+    receiptCredentialRequestContext: jbyteArray,
+    receiptCredentialResponse: jbyteArray,
+    receiptCredentialOut: jbyteArray,
+) -> i32 {
+    let result = panic::catch_unwind(|| {
+        let server_public_params = env.convert_byte_array(serverPublicParams).unwrap();
+        let receipt_credential_request_context = env
+            .convert_byte_array(receiptCredentialRequestContext)
+            .unwrap();
+        let receipt_credential_response =
+            env.convert_byte_array(receiptCredentialResponse).unwrap();
+        let mut receipt_credential: Vec<u8> =
+            vec![0; env.get_array_length(receiptCredentialOut).unwrap() as usize];
+
+        let ffi_return = simpleapi::ServerPublicParams_receiveReceiptCredential(
+            &server_public_params,
+            &receipt_credential_request_context,
+            &receipt_credential_response,
+            &mut receipt_credential,
+        );
+        if ffi_return != FFI_RETURN_OK {
+            return ffi_return;
+        }
+
+        env.set_byte_array_region(receiptCredentialOut, 0, &u8toi8(receipt_credential)[..])
+            .unwrap();
+        FFI_RETURN_OK
+    });
+
+    match result {
+        Ok(result) => result,
+        Err(_) => FFI_RETURN_INTERNAL_ERROR,
+    }
+}
+
+#[no_mangle]
+pub extern "system" fn Java_org_signal_zkgroup_internal_Native_serverPublicParamsCreateReceiptCredentialPresentationDeterministicJNI(
+    env: JNIEnv,
+    _class: JClass,
+    serverPublicParams: jbyteArray,
+    randomness: jbyteArray,
+    receiptCredential: jbyteArray,
+    receiptCredentialPresentationOut: jbyteArray,
+) -> i32 {
+    let result = panic::catch_unwind(|| {
+        let server_public_params = env.convert_byte_array(serverPublicParams).unwrap();
+        let randomness = env.convert_byte_array(randomness).unwrap();
+        let receipt_credential = env.convert_byte_array(receiptCredential).unwrap();
+        let mut receipt_credential_presentation: Vec<u8> = vec![
+            0;
+            env.get_array_length(receiptCredentialPresentationOut)
+                .unwrap() as usize
+        ];
+
+        let ffi_return =
+            simpleapi::ServerPublicParams_createReceiptCredentialPresentationDeterministic(
+                &server_public_params,
+                &randomness,
+                &receipt_credential,
+                &mut receipt_credential_presentation,
+            );
+        if ffi_return != FFI_RETURN_OK {
+            return ffi_return;
+        }
+
+        env.set_byte_array_region(
+            receiptCredentialPresentationOut,
+            0,
+            &u8toi8(receipt_credential_presentation)[..],
         )
         .unwrap();
         FFI_RETURN_OK
@@ -968,6 +1233,57 @@ pub extern "system" fn Java_org_signal_zkgroup_internal_Native_serverSecretParam
 }
 
 #[no_mangle]
+pub extern "system" fn Java_org_signal_zkgroup_internal_Native_serverSecretParamsIssuePniCredentialDeterministicJNI(
+    env: JNIEnv,
+    _class: JClass,
+    serverSecretParams: jbyteArray,
+    randomness: jbyteArray,
+    profileKeyCredentialRequest: jbyteArray,
+    aci: jbyteArray,
+    pni: jbyteArray,
+    profileKeyCommitment: jbyteArray,
+    pniCredentialResponseOut: jbyteArray,
+) -> i32 {
+    let result = panic::catch_unwind(|| {
+        let server_secret_params = env.convert_byte_array(serverSecretParams).unwrap();
+        let randomness = env.convert_byte_array(randomness).unwrap();
+        let profile_key_credential_request =
+            env.convert_byte_array(profileKeyCredentialRequest).unwrap();
+        let aci = env.convert_byte_array(aci).unwrap();
+        let pni = env.convert_byte_array(pni).unwrap();
+        let profile_key_commitment = env.convert_byte_array(profileKeyCommitment).unwrap();
+        let mut pni_credential_response: Vec<u8> =
+            vec![0; env.get_array_length(pniCredentialResponseOut).unwrap() as usize];
+
+        let ffi_return = simpleapi::ServerSecretParams_issuePniCredentialDeterministic(
+            &server_secret_params,
+            &randomness,
+            &profile_key_credential_request,
+            &aci,
+            &pni,
+            &profile_key_commitment,
+            &mut pni_credential_response,
+        );
+        if ffi_return != FFI_RETURN_OK {
+            return ffi_return;
+        }
+
+        env.set_byte_array_region(
+            pniCredentialResponseOut,
+            0,
+            &u8toi8(pni_credential_response)[..],
+        )
+        .unwrap();
+        FFI_RETURN_OK
+    });
+
+    match result {
+        Ok(result) => result,
+        Err(_) => FFI_RETURN_INTERNAL_ERROR,
+    }
+}
+
+#[no_mangle]
 pub extern "system" fn Java_org_signal_zkgroup_internal_Native_serverSecretParamsVerifyProfileKeyCredentialPresentationJNI(
     env: JNIEnv,
     _class: JClass,
@@ -986,6 +1302,113 @@ pub extern "system" fn Java_org_signal_zkgroup_internal_Native_serverSecretParam
             &server_secret_params,
             &group_public_params,
             &profile_key_credential_presentation,
+        );
+        if ffi_return != FFI_RETURN_OK {
+            return ffi_return;
+        }
+        FFI_RETURN_OK
+    });
+
+    match result {
+        Ok(result) => result,
+        Err(_) => FFI_RETURN_INTERNAL_ERROR,
+    }
+}
+
+#[no_mangle]
+pub extern "system" fn Java_org_signal_zkgroup_internal_Native_serverSecretParamsVerifyPniCredentialPresentationJNI(
+    env: JNIEnv,
+    _class: JClass,
+    serverSecretParams: jbyteArray,
+    groupPublicParams: jbyteArray,
+    pniCredentialPresentation: jbyteArray,
+) -> i32 {
+    let result = panic::catch_unwind(|| {
+        let server_secret_params = env.convert_byte_array(serverSecretParams).unwrap();
+        let group_public_params = env.convert_byte_array(groupPublicParams).unwrap();
+        let pni_credential_presentation =
+            env.convert_byte_array(pniCredentialPresentation).unwrap();
+
+        let ffi_return = simpleapi::ServerSecretParams_verifyPniCredentialPresentation(
+            &server_secret_params,
+            &group_public_params,
+            &pni_credential_presentation,
+        );
+        if ffi_return != FFI_RETURN_OK {
+            return ffi_return;
+        }
+        FFI_RETURN_OK
+    });
+
+    match result {
+        Ok(result) => result,
+        Err(_) => FFI_RETURN_INTERNAL_ERROR,
+    }
+}
+
+#[no_mangle]
+pub extern "system" fn Java_org_signal_zkgroup_internal_Native_serverSecretParamsIssueReceiptCredentialDeterministicJNI(
+    env: JNIEnv,
+    _class: JClass,
+    serverSecretParams: jbyteArray,
+    randomness: jbyteArray,
+    receiptCredentialRequest: jbyteArray,
+    receiptExpirationTime: jlong,
+    receiptLevel: jlong,
+    receiptCredentialResponseOut: jbyteArray,
+) -> i32 {
+    let result = panic::catch_unwind(|| {
+        let server_secret_params = env.convert_byte_array(serverSecretParams).unwrap();
+        let randomness = env.convert_byte_array(randomness).unwrap();
+        let receipt_credential_request = env.convert_byte_array(receiptCredentialRequest).unwrap();
+        let receipt_expiration_time = receiptExpirationTime as u64;
+        let receipt_level = receiptLevel as u64;
+        let mut receipt_credential_response: Vec<u8> =
+            vec![0; env.get_array_length(receiptCredentialResponseOut).unwrap() as usize];
+
+        let ffi_return = simpleapi::ServerSecretParams_issueReceiptCredentialDeterministic(
+            &server_secret_params,
+            &randomness,
+            &receipt_credential_request,
+            receipt_expiration_time,
+            receipt_level,
+            &mut receipt_credential_response,
+        );
+        if ffi_return != FFI_RETURN_OK {
+            return ffi_return;
+        }
+
+        env.set_byte_array_region(
+            receiptCredentialResponseOut,
+            0,
+            &u8toi8(receipt_credential_response)[..],
+        )
+        .unwrap();
+        FFI_RETURN_OK
+    });
+
+    match result {
+        Ok(result) => result,
+        Err(_) => FFI_RETURN_INTERNAL_ERROR,
+    }
+}
+
+#[no_mangle]
+pub extern "system" fn Java_org_signal_zkgroup_internal_Native_serverSecretParamsVerifyReceiptCredentialPresentationJNI(
+    env: JNIEnv,
+    _class: JClass,
+    serverSecretParams: jbyteArray,
+    receiptCredentialPresentation: jbyteArray,
+) -> i32 {
+    let result = panic::catch_unwind(|| {
+        let server_secret_params = env.convert_byte_array(serverSecretParams).unwrap();
+        let receipt_credential_presentation = env
+            .convert_byte_array(receiptCredentialPresentation)
+            .unwrap();
+
+        let ffi_return = simpleapi::ServerSecretParams_verifyReceiptCredentialPresentation(
+            &server_secret_params,
+            &receipt_credential_presentation,
         );
         if ffi_return != FFI_RETURN_OK {
             return ffi_return;
@@ -1304,6 +1727,70 @@ pub extern "system" fn Java_org_signal_zkgroup_internal_Native_profileKeyCredent
 }
 
 #[no_mangle]
+pub extern "system" fn Java_org_signal_zkgroup_internal_Native_pniCredentialRequestContextCheckValidContentsJNI(
+    env: JNIEnv,
+    _class: JClass,
+    pniCredentialRequestContext: jbyteArray,
+) -> i32 {
+    let result = panic::catch_unwind(|| {
+        let pni_credential_request_context =
+            env.convert_byte_array(pniCredentialRequestContext).unwrap();
+
+        let ffi_return = simpleapi::PniCredentialRequestContext_checkValidContents(
+            &pni_credential_request_context,
+        );
+        if ffi_return != FFI_RETURN_OK {
+            return ffi_return;
+        }
+        FFI_RETURN_OK
+    });
+
+    match result {
+        Ok(result) => result,
+        Err(_) => FFI_RETURN_INTERNAL_ERROR,
+    }
+}
+
+#[no_mangle]
+pub extern "system" fn Java_org_signal_zkgroup_internal_Native_pniCredentialRequestContextGetRequestJNI(
+    env: JNIEnv,
+    _class: JClass,
+    pniCredentialRequestContext: jbyteArray,
+    profileKeyCredentialRequestOut: jbyteArray,
+) -> i32 {
+    let result = panic::catch_unwind(|| {
+        let pni_credential_request_context =
+            env.convert_byte_array(pniCredentialRequestContext).unwrap();
+        let mut profile_key_credential_request: Vec<u8> = vec![
+            0;
+            env.get_array_length(profileKeyCredentialRequestOut)
+                .unwrap() as usize
+        ];
+
+        let ffi_return = simpleapi::PniCredentialRequestContext_getRequest(
+            &pni_credential_request_context,
+            &mut profile_key_credential_request,
+        );
+        if ffi_return != FFI_RETURN_OK {
+            return ffi_return;
+        }
+
+        env.set_byte_array_region(
+            profileKeyCredentialRequestOut,
+            0,
+            &u8toi8(profile_key_credential_request)[..],
+        )
+        .unwrap();
+        FFI_RETURN_OK
+    });
+
+    match result {
+        Ok(result) => result,
+        Err(_) => FFI_RETURN_INTERNAL_ERROR,
+    }
+}
+
+#[no_mangle]
 pub extern "system" fn Java_org_signal_zkgroup_internal_Native_profileKeyCredentialRequestCheckValidContentsJNI(
     env: JNIEnv,
     _class: JClass,
@@ -1355,6 +1842,29 @@ pub extern "system" fn Java_org_signal_zkgroup_internal_Native_profileKeyCredent
 }
 
 #[no_mangle]
+pub extern "system" fn Java_org_signal_zkgroup_internal_Native_pniCredentialResponseCheckValidContentsJNI(
+    env: JNIEnv,
+    _class: JClass,
+    pniCredentialResponse: jbyteArray,
+) -> i32 {
+    let result = panic::catch_unwind(|| {
+        let pni_credential_response = env.convert_byte_array(pniCredentialResponse).unwrap();
+
+        let ffi_return =
+            simpleapi::PniCredentialResponse_checkValidContents(&pni_credential_response);
+        if ffi_return != FFI_RETURN_OK {
+            return ffi_return;
+        }
+        FFI_RETURN_OK
+    });
+
+    match result {
+        Ok(result) => result,
+        Err(_) => FFI_RETURN_INTERNAL_ERROR,
+    }
+}
+
+#[no_mangle]
 pub extern "system" fn Java_org_signal_zkgroup_internal_Native_profileKeyCredentialCheckValidContentsJNI(
     env: JNIEnv,
     _class: JClass,
@@ -1365,6 +1875,28 @@ pub extern "system" fn Java_org_signal_zkgroup_internal_Native_profileKeyCredent
 
         let ffi_return =
             simpleapi::ProfileKeyCredential_checkValidContents(&profile_key_credential);
+        if ffi_return != FFI_RETURN_OK {
+            return ffi_return;
+        }
+        FFI_RETURN_OK
+    });
+
+    match result {
+        Ok(result) => result,
+        Err(_) => FFI_RETURN_INTERNAL_ERROR,
+    }
+}
+
+#[no_mangle]
+pub extern "system" fn Java_org_signal_zkgroup_internal_Native_pniCredentialCheckValidContentsJNI(
+    env: JNIEnv,
+    _class: JClass,
+    pniCredential: jbyteArray,
+) -> i32 {
+    let result = panic::catch_unwind(|| {
+        let pni_credential = env.convert_byte_array(pniCredential).unwrap();
+
+        let ffi_return = simpleapi::PniCredential_checkValidContents(&pni_credential);
         if ffi_return != FFI_RETURN_OK {
             return ffi_return;
         }
@@ -1464,6 +1996,455 @@ pub extern "system" fn Java_org_signal_zkgroup_internal_Native_profileKeyCredent
             &u8toi8(profile_key_ciphertext)[..],
         )
         .unwrap();
+        FFI_RETURN_OK
+    });
+
+    match result {
+        Ok(result) => result,
+        Err(_) => FFI_RETURN_INTERNAL_ERROR,
+    }
+}
+
+#[no_mangle]
+pub extern "system" fn Java_org_signal_zkgroup_internal_Native_pniCredentialPresentationCheckValidContentsJNI(
+    env: JNIEnv,
+    _class: JClass,
+    pniCredentialPresentation: jbyteArray,
+) -> i32 {
+    let result = panic::catch_unwind(|| {
+        let pni_credential_presentation =
+            env.convert_byte_array(pniCredentialPresentation).unwrap();
+
+        let ffi_return =
+            simpleapi::PniCredentialPresentation_checkValidContents(&pni_credential_presentation);
+        if ffi_return != FFI_RETURN_OK {
+            return ffi_return;
+        }
+        FFI_RETURN_OK
+    });
+
+    match result {
+        Ok(result) => result,
+        Err(_) => FFI_RETURN_INTERNAL_ERROR,
+    }
+}
+
+#[no_mangle]
+pub extern "system" fn Java_org_signal_zkgroup_internal_Native_pniCredentialPresentationGetAciCiphertextJNI(
+    env: JNIEnv,
+    _class: JClass,
+    pniCredentialPresentation: jbyteArray,
+    uuidCiphertextOut: jbyteArray,
+) -> i32 {
+    let result = panic::catch_unwind(|| {
+        let pni_credential_presentation =
+            env.convert_byte_array(pniCredentialPresentation).unwrap();
+        let mut uuid_ciphertext: Vec<u8> =
+            vec![0; env.get_array_length(uuidCiphertextOut).unwrap() as usize];
+
+        let ffi_return = simpleapi::PniCredentialPresentation_getAciCiphertext(
+            &pni_credential_presentation,
+            &mut uuid_ciphertext,
+        );
+        if ffi_return != FFI_RETURN_OK {
+            return ffi_return;
+        }
+
+        env.set_byte_array_region(uuidCiphertextOut, 0, &u8toi8(uuid_ciphertext)[..])
+            .unwrap();
+        FFI_RETURN_OK
+    });
+
+    match result {
+        Ok(result) => result,
+        Err(_) => FFI_RETURN_INTERNAL_ERROR,
+    }
+}
+
+#[no_mangle]
+pub extern "system" fn Java_org_signal_zkgroup_internal_Native_pniCredentialPresentationGetPniCiphertextJNI(
+    env: JNIEnv,
+    _class: JClass,
+    pniCredentialPresentation: jbyteArray,
+    uuidCiphertextOut: jbyteArray,
+) -> i32 {
+    let result = panic::catch_unwind(|| {
+        let pni_credential_presentation =
+            env.convert_byte_array(pniCredentialPresentation).unwrap();
+        let mut uuid_ciphertext: Vec<u8> =
+            vec![0; env.get_array_length(uuidCiphertextOut).unwrap() as usize];
+
+        let ffi_return = simpleapi::PniCredentialPresentation_getPniCiphertext(
+            &pni_credential_presentation,
+            &mut uuid_ciphertext,
+        );
+        if ffi_return != FFI_RETURN_OK {
+            return ffi_return;
+        }
+
+        env.set_byte_array_region(uuidCiphertextOut, 0, &u8toi8(uuid_ciphertext)[..])
+            .unwrap();
+        FFI_RETURN_OK
+    });
+
+    match result {
+        Ok(result) => result,
+        Err(_) => FFI_RETURN_INTERNAL_ERROR,
+    }
+}
+
+#[no_mangle]
+pub extern "system" fn Java_org_signal_zkgroup_internal_Native_pniCredentialPresentationGetProfileKeyCiphertextJNI(
+    env: JNIEnv,
+    _class: JClass,
+    pniCredentialPresentation: jbyteArray,
+    profileKeyCiphertextOut: jbyteArray,
+) -> i32 {
+    let result = panic::catch_unwind(|| {
+        let pni_credential_presentation =
+            env.convert_byte_array(pniCredentialPresentation).unwrap();
+        let mut profile_key_ciphertext: Vec<u8> =
+            vec![0; env.get_array_length(profileKeyCiphertextOut).unwrap() as usize];
+
+        let ffi_return = simpleapi::PniCredentialPresentation_getProfileKeyCiphertext(
+            &pni_credential_presentation,
+            &mut profile_key_ciphertext,
+        );
+        if ffi_return != FFI_RETURN_OK {
+            return ffi_return;
+        }
+
+        env.set_byte_array_region(
+            profileKeyCiphertextOut,
+            0,
+            &u8toi8(profile_key_ciphertext)[..],
+        )
+        .unwrap();
+        FFI_RETURN_OK
+    });
+
+    match result {
+        Ok(result) => result,
+        Err(_) => FFI_RETURN_INTERNAL_ERROR,
+    }
+}
+
+#[no_mangle]
+pub extern "system" fn Java_org_signal_zkgroup_internal_Native_receiptCredentialRequestContextCheckValidContentsJNI(
+    env: JNIEnv,
+    _class: JClass,
+    receiptCredentialRequestContext: jbyteArray,
+) -> i32 {
+    let result = panic::catch_unwind(|| {
+        let receipt_credential_request_context = env
+            .convert_byte_array(receiptCredentialRequestContext)
+            .unwrap();
+
+        let ffi_return = simpleapi::ReceiptCredentialRequestContext_checkValidContents(
+            &receipt_credential_request_context,
+        );
+        if ffi_return != FFI_RETURN_OK {
+            return ffi_return;
+        }
+        FFI_RETURN_OK
+    });
+
+    match result {
+        Ok(result) => result,
+        Err(_) => FFI_RETURN_INTERNAL_ERROR,
+    }
+}
+
+#[no_mangle]
+pub extern "system" fn Java_org_signal_zkgroup_internal_Native_receiptCredentialRequestContextGetRequestJNI(
+    env: JNIEnv,
+    _class: JClass,
+    receiptCredentialRequestContext: jbyteArray,
+    receiptCredentialRequestOut: jbyteArray,
+) -> i32 {
+    let result = panic::catch_unwind(|| {
+        let receipt_credential_request_context = env
+            .convert_byte_array(receiptCredentialRequestContext)
+            .unwrap();
+        let mut receipt_credential_request: Vec<u8> =
+            vec![0; env.get_array_length(receiptCredentialRequestOut).unwrap() as usize];
+
+        let ffi_return = simpleapi::ReceiptCredentialRequestContext_getRequest(
+            &receipt_credential_request_context,
+            &mut receipt_credential_request,
+        );
+        if ffi_return != FFI_RETURN_OK {
+            return ffi_return;
+        }
+
+        env.set_byte_array_region(
+            receiptCredentialRequestOut,
+            0,
+            &u8toi8(receipt_credential_request)[..],
+        )
+        .unwrap();
+        FFI_RETURN_OK
+    });
+
+    match result {
+        Ok(result) => result,
+        Err(_) => FFI_RETURN_INTERNAL_ERROR,
+    }
+}
+
+#[no_mangle]
+pub extern "system" fn Java_org_signal_zkgroup_internal_Native_receiptCredentialRequestCheckValidContentsJNI(
+    env: JNIEnv,
+    _class: JClass,
+    receiptCredentialRequest: jbyteArray,
+) -> i32 {
+    let result = panic::catch_unwind(|| {
+        let receipt_credential_request = env.convert_byte_array(receiptCredentialRequest).unwrap();
+
+        let ffi_return =
+            simpleapi::ReceiptCredentialRequest_checkValidContents(&receipt_credential_request);
+        if ffi_return != FFI_RETURN_OK {
+            return ffi_return;
+        }
+        FFI_RETURN_OK
+    });
+
+    match result {
+        Ok(result) => result,
+        Err(_) => FFI_RETURN_INTERNAL_ERROR,
+    }
+}
+
+#[no_mangle]
+pub extern "system" fn Java_org_signal_zkgroup_internal_Native_receiptCredentialResponseCheckValidContentsJNI(
+    env: JNIEnv,
+    _class: JClass,
+    receiptCredentialResponse: jbyteArray,
+) -> i32 {
+    let result = panic::catch_unwind(|| {
+        let receipt_credential_response =
+            env.convert_byte_array(receiptCredentialResponse).unwrap();
+
+        let ffi_return =
+            simpleapi::ReceiptCredentialResponse_checkValidContents(&receipt_credential_response);
+        if ffi_return != FFI_RETURN_OK {
+            return ffi_return;
+        }
+        FFI_RETURN_OK
+    });
+
+    match result {
+        Ok(result) => result,
+        Err(_) => FFI_RETURN_INTERNAL_ERROR,
+    }
+}
+
+#[no_mangle]
+pub extern "system" fn Java_org_signal_zkgroup_internal_Native_receiptCredentialCheckValidContentsJNI(
+    env: JNIEnv,
+    _class: JClass,
+    receiptCredential: jbyteArray,
+) -> i32 {
+    let result = panic::catch_unwind(|| {
+        let receipt_credential = env.convert_byte_array(receiptCredential).unwrap();
+
+        let ffi_return = simpleapi::ReceiptCredential_checkValidContents(&receipt_credential);
+        if ffi_return != FFI_RETURN_OK {
+            return ffi_return;
+        }
+        FFI_RETURN_OK
+    });
+
+    match result {
+        Ok(result) => result,
+        Err(_) => FFI_RETURN_INTERNAL_ERROR,
+    }
+}
+
+#[no_mangle]
+pub extern "system" fn Java_org_signal_zkgroup_internal_Native_receiptCredentialGetReceiptExpirationTimeJNI(
+    env: JNIEnv,
+    _class: JClass,
+    receiptCredential: jbyteArray,
+    receiptExpirationTimeOut: jbyteArray,
+) -> i32 {
+    let result = panic::catch_unwind(|| {
+        let receipt_credential = env.convert_byte_array(receiptCredential).unwrap();
+        let mut receipt_expiration_time: Vec<u8> =
+            vec![0; env.get_array_length(receiptExpirationTimeOut).unwrap() as usize];
+
+        let ffi_return = simpleapi::ReceiptCredential_getReceiptExpirationTime(
+            &receipt_credential,
+            &mut receipt_expiration_time,
+        );
+        if ffi_return != FFI_RETURN_OK {
+            return ffi_return;
+        }
+
+        env.set_byte_array_region(
+            receiptExpirationTimeOut,
+            0,
+            &u8toi8(receipt_expiration_time)[..],
+        )
+        .unwrap();
+        FFI_RETURN_OK
+    });
+
+    match result {
+        Ok(result) => result,
+        Err(_) => FFI_RETURN_INTERNAL_ERROR,
+    }
+}
+
+#[no_mangle]
+pub extern "system" fn Java_org_signal_zkgroup_internal_Native_receiptCredentialGetReceiptLevelJNI(
+    env: JNIEnv,
+    _class: JClass,
+    receiptCredential: jbyteArray,
+    receiptLevelOut: jbyteArray,
+) -> i32 {
+    let result = panic::catch_unwind(|| {
+        let receipt_credential = env.convert_byte_array(receiptCredential).unwrap();
+        let mut receipt_level: Vec<u8> =
+            vec![0; env.get_array_length(receiptLevelOut).unwrap() as usize];
+
+        let ffi_return =
+            simpleapi::ReceiptCredential_getReceiptLevel(&receipt_credential, &mut receipt_level);
+        if ffi_return != FFI_RETURN_OK {
+            return ffi_return;
+        }
+
+        env.set_byte_array_region(receiptLevelOut, 0, &u8toi8(receipt_level)[..])
+            .unwrap();
+        FFI_RETURN_OK
+    });
+
+    match result {
+        Ok(result) => result,
+        Err(_) => FFI_RETURN_INTERNAL_ERROR,
+    }
+}
+
+#[no_mangle]
+pub extern "system" fn Java_org_signal_zkgroup_internal_Native_receiptCredentialPresentationCheckValidContentsJNI(
+    env: JNIEnv,
+    _class: JClass,
+    receiptCredentialPresentation: jbyteArray,
+) -> i32 {
+    let result = panic::catch_unwind(|| {
+        let receipt_credential_presentation = env
+            .convert_byte_array(receiptCredentialPresentation)
+            .unwrap();
+
+        let ffi_return = simpleapi::ReceiptCredentialPresentation_checkValidContents(
+            &receipt_credential_presentation,
+        );
+        if ffi_return != FFI_RETURN_OK {
+            return ffi_return;
+        }
+        FFI_RETURN_OK
+    });
+
+    match result {
+        Ok(result) => result,
+        Err(_) => FFI_RETURN_INTERNAL_ERROR,
+    }
+}
+
+#[no_mangle]
+pub extern "system" fn Java_org_signal_zkgroup_internal_Native_receiptCredentialPresentationGetReceiptExpirationTimeJNI(
+    env: JNIEnv,
+    _class: JClass,
+    receiptCredentialPresentation: jbyteArray,
+    receiptExpirationTimeOut: jbyteArray,
+) -> i32 {
+    let result = panic::catch_unwind(|| {
+        let receipt_credential_presentation = env
+            .convert_byte_array(receiptCredentialPresentation)
+            .unwrap();
+        let mut receipt_expiration_time: Vec<u8> =
+            vec![0; env.get_array_length(receiptExpirationTimeOut).unwrap() as usize];
+
+        let ffi_return = simpleapi::ReceiptCredentialPresentation_getReceiptExpirationTime(
+            &receipt_credential_presentation,
+            &mut receipt_expiration_time,
+        );
+        if ffi_return != FFI_RETURN_OK {
+            return ffi_return;
+        }
+
+        env.set_byte_array_region(
+            receiptExpirationTimeOut,
+            0,
+            &u8toi8(receipt_expiration_time)[..],
+        )
+        .unwrap();
+        FFI_RETURN_OK
+    });
+
+    match result {
+        Ok(result) => result,
+        Err(_) => FFI_RETURN_INTERNAL_ERROR,
+    }
+}
+
+#[no_mangle]
+pub extern "system" fn Java_org_signal_zkgroup_internal_Native_receiptCredentialPresentationGetReceiptLevelJNI(
+    env: JNIEnv,
+    _class: JClass,
+    receiptCredentialPresentation: jbyteArray,
+    receiptLevelOut: jbyteArray,
+) -> i32 {
+    let result = panic::catch_unwind(|| {
+        let receipt_credential_presentation = env
+            .convert_byte_array(receiptCredentialPresentation)
+            .unwrap();
+        let mut receipt_level: Vec<u8> =
+            vec![0; env.get_array_length(receiptLevelOut).unwrap() as usize];
+
+        let ffi_return = simpleapi::ReceiptCredentialPresentation_getReceiptLevel(
+            &receipt_credential_presentation,
+            &mut receipt_level,
+        );
+        if ffi_return != FFI_RETURN_OK {
+            return ffi_return;
+        }
+
+        env.set_byte_array_region(receiptLevelOut, 0, &u8toi8(receipt_level)[..])
+            .unwrap();
+        FFI_RETURN_OK
+    });
+
+    match result {
+        Ok(result) => result,
+        Err(_) => FFI_RETURN_INTERNAL_ERROR,
+    }
+}
+
+#[no_mangle]
+pub extern "system" fn Java_org_signal_zkgroup_internal_Native_receiptCredentialPresentationGetReceiptSerialJNI(
+    env: JNIEnv,
+    _class: JClass,
+    receiptCredentialPresentation: jbyteArray,
+    receiptSerialOut: jbyteArray,
+) -> i32 {
+    let result = panic::catch_unwind(|| {
+        let receipt_credential_presentation = env
+            .convert_byte_array(receiptCredentialPresentation)
+            .unwrap();
+        let mut receipt_serial: Vec<u8> =
+            vec![0; env.get_array_length(receiptSerialOut).unwrap() as usize];
+
+        let ffi_return = simpleapi::ReceiptCredentialPresentation_getReceiptSerial(
+            &receipt_credential_presentation,
+            &mut receipt_serial,
+        );
+        if ffi_return != FFI_RETURN_OK {
+            return ffi_return;
+        }
+
+        env.set_byte_array_region(receiptSerialOut, 0, &u8toi8(receipt_serial)[..])
+            .unwrap();
         FFI_RETURN_OK
     });
 
