@@ -241,6 +241,21 @@ template_method_int = \
   }
 """
 
+template_method_long = \
+"""
+  %(access)s long %(method_name)s(%(param_decls)s) %(exception_decl)s{
+    byte[] newContents = new byte[8];
+
+    int ffi_return = Native.%(jni_method_name)s(%(contents)s, %(param_args)snewContents);%(exception_check)s
+
+    if (ffi_return != Native.FFI_RETURN_OK) {
+      throw new ZkGroupError("FFI_RETURN!=OK");
+    }
+
+    return ByteBuffer.wrap(newContents).getLong();
+  }
+"""
+
 template_method_rand_wrapper = \
 """
   public %(return_name)s %(method_name)s(%(param_decls)s) %(exception_decl)s{
@@ -367,7 +382,7 @@ def get_rand_wrapper_decls(params):
 def get_args(params, import_strings, commaAtEnd):
     s = ""
     for param in params:
-        if param[0] == "byte[]" or param[0] == "int":
+        if param[0] == "byte[]" or param[0] == "int" or param[0] == "long":
             s += param[1].lower_camel() + ", "
         elif param[0] == "UUID":
             s += "UUIDUtil.serialize(" + param[1].lower_camel() + "), "
@@ -388,16 +403,12 @@ def get_jni_arg_decls(params, selfBool, commaAtEndBool):
         s += "byte[] self, "
     counter = 0
     for param in params:
-        if param[0] == "byte[]":
-            s += "byte[] %s, " % param[1].lower_camel()
-        elif param[0] == "int":
-            s += "int %s, " % param[1].lower_camel()
-        elif param[0] == "UUID":
-            s += "byte[] %s, " % param[1].lower_camel()
-        elif param[1].snake() == "randomness":
-            s += "byte[] %s, " % param[1].lower_camel()
+        if param[0] == "int":
+            s += f"int {param[1].lower_camel()}, "
+        elif param[0] == "long":
+            s += f"long {param[1].lower_camel()}, "
         else:
-            s += "byte[] %s, " % param[1].lower_camel()
+            s += f"byte[] {param[1].lower_camel()}, "
         counter += 1
 
     if len(s) != 0 and not commaAtEndBool:
@@ -579,6 +590,11 @@ def print_class(c, runtime_error_on_serialize_dict, class_dir_dict):
             param_args = get_args(method.params, import_strings, False)
             append_jni_function_decl(jni_method_name, method.params, True, True)
             import_strings += "import java.nio.ByteBuffer;",
+        elif method.return_type == "long":
+            template = template_method_long
+            param_args = get_args(method.params, import_strings, False)
+            append_jni_function_decl(jni_method_name, method.params, True, True)
+            import_strings += "import java.nio.ByteBuffer;",
         elif method.return_type == "UUID":
             import_strings.append("import java.util.UUID;")
             template = template_method_uuid
@@ -588,14 +604,8 @@ def print_class(c, runtime_error_on_serialize_dict, class_dir_dict):
             template = template_method_bytearray
             param_args = get_args(method.params, import_strings, True)
             append_jni_function_decl(jni_method_name, method.params, True, True)
-            if method.params[0][1].lower_camel() == "randomness":
-                return_len = method.params[1][1].lower_camel()  # hardcode to second arg if first is randomness
-            else:
-                return_len = method.params[0][1].lower_camel()  # hardcode to first arg
-            if method.return_size_increment >= 0:
-                return_len += ".length+%d" % method.return_size_increment
-            if method.return_size_increment < 0:
-                return_len += ".length%d" % method.return_size_increment
+            if method.relative_return_size is not None:
+                return_len = f"{method.params[method.relative_return_size][1].lower_camel()}.length + {method.return_size_increment}"
         else:
             add_import(import_strings, class_dir_dict, my_dir_name, method.return_name)
             if runtime_error_on_serialize_dict[method.return_name.snake()]:
@@ -607,7 +617,7 @@ def print_class(c, runtime_error_on_serialize_dict, class_dir_dict):
             append_jni_function_decl(jni_method_name, method.params, True, True)
         if method.return_name.snake() == "uuid":
             return_len = "UUIDUtil.UUID_LENGTH"
-        elif return_len == None:
+        elif return_len is None:
             return_len = method.return_name.camel() + ".SIZE"
 
 
